@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTableWidget,
                              QTableWidgetItem, QPushButton, QHeaderView,
                              QMessageBox, QLineEdit, QLabel, QFormLayout,
-                             QDialogButtonBox, QComboBox)
+                             QDialogButtonBox, QGroupBox, QWidget)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
@@ -56,8 +56,7 @@ class VariablesDialog(QDialog):
         table_group = QGroupBox("Существующие переменные")
         table_layout = QVBoxLayout(table_group)
 
-        self.table = QTableWidget()
-        self.table.setColumnCount(4)
+        self.table = QTableWidget(0, 4)  # Явно указываем 0 строк и 4 колонки
         self.table.setHorizontalHeaderLabels(["Имя", "Значение", "Комментарий", "Действия"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
@@ -73,109 +72,159 @@ class VariablesDialog(QDialog):
         layout.addWidget(button_box)
 
     def load_variables(self):
-        variables = self.variable_manager.get_all_variables()
-        self.table.setRowCount(len(variables))
+        """Безопасная загрузка переменных в таблицу"""
+        try:
+            variables = self.variable_manager.get_all_variables()
+            self.table.setRowCount(len(variables))
 
-        for row, variable in enumerate(variables):
-            self.table.setItem(row, 0, QTableWidgetItem(variable.name))
+            for row, variable in enumerate(variables):
+                # Имя переменной
+                name_item = QTableWidgetItem(variable.name)
+                self.table.setItem(row, 0, name_item)
 
-            # Значение (скрываем пароли)
-            value_item = QTableWidgetItem(variable.value)
-            if any(keyword in variable.name.lower() for keyword in ['pwd', 'password', 'pass']):
-                value_item.setText("••••••••")
-            self.table.setItem(row, 1, value_item)
+                # Значение (скрываем пароли)
+                value_text = variable.value
+                if any(keyword in variable.name.lower() for keyword in ['pwd', 'password', 'pass']):
+                    value_text = "••••••••"
+                value_item = QTableWidgetItem(value_text)
+                self.table.setItem(row, 1, value_item)
 
-            self.table.setItem(row, 2, QTableWidgetItem(variable.comment))
+                # Комментарий
+                comment_item = QTableWidgetItem(variable.comment)
+                self.table.setItem(row, 2, comment_item)
 
-            # Кнопки действий
-            action_layout = QHBoxLayout()
-            action_widget = QWidget()
+                # Кнопки действий
+                action_widget = self.create_action_buttons(row)
+                self.table.setCellWidget(row, 3, action_widget)
 
-            edit_btn = QPushButton("Изменить")
-            delete_btn = QPushButton("Удалить")
-            use_btn = QPushButton("Использовать")
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка загрузки переменных: {str(e)}")
 
-            edit_btn.clicked.connect(lambda checked, r=row: self.edit_variable(r))
-            delete_btn.clicked.connect(lambda checked, r=row: self.delete_variable(r))
-            use_btn.clicked.connect(lambda checked, r=row: self.use_variable(r))
+    def create_action_buttons(self, row):
+        """Создание кнопок действий для строки таблицы"""
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(2, 2, 2, 2)
 
-            action_layout.addWidget(edit_btn)
-            action_layout.addWidget(delete_btn)
-            action_layout.addWidget(use_btn)
-            action_layout.setContentsMargins(0, 0, 0, 0)
+        edit_btn = QPushButton("Изменить")
+        delete_btn = QPushButton("Удалить")
+        use_btn = QPushButton("Использовать")
 
-            action_widget.setLayout(action_layout)
-            self.table.setCellWidget(row, 3, action_widget)
+        # Сохраняем row в свойствах кнопок
+        edit_btn.setProperty("row_index", row)
+        delete_btn.setProperty("row_index", row)
+        use_btn.setProperty("row_index", row)
+
+        edit_btn.clicked.connect(self.edit_variable)
+        delete_btn.clicked.connect(self.delete_variable)
+        use_btn.clicked.connect(self.use_variable)
+
+        layout.addWidget(edit_btn)
+        layout.addWidget(delete_btn)
+        layout.addWidget(use_btn)
+
+        return widget
 
     def add_variable(self):
-        name = self.name_edit.text().strip()
-        value = self.value_edit.text().strip()
-        comment = self.comment_edit.text().strip()
+        """Добавление новой переменной"""
+        try:
+            name = self.name_edit.text().strip()
+            value = self.value_edit.text().strip()
+            comment = self.comment_edit.text().strip()
 
-        if not name or not value:
-            QMessageBox.warning(self, "Ошибка", "Заполните имя и значение переменной")
-            return
+            if not name or not value:
+                QMessageBox.warning(self, "Ошибка", "Заполните имя и значение переменной")
+                return
 
-        is_valid, message = self.variable_manager.validate_variable_name(name)
-        if not is_valid:
-            QMessageBox.warning(self, "Ошибка", message)
-            return
+            is_valid, message = self.variable_manager.validate_variable_name(name)
+            if not is_valid:
+                QMessageBox.warning(self, "Ошибка", message)
+                return
 
-        self.variable_manager.set_variable(name, value, comment)
-        self.load_variables()
-        self.clear_form()
-        QMessageBox.information(self, "Успех", f"Переменная '{name}' добавлена")
+            self.variable_manager.set_variable(name, value, comment)
+            self.load_variables()
+            self.clear_form()
+            QMessageBox.information(self, "Успех", f"Переменная '{name}' добавлена")
 
-    def edit_variable(self, row):
-        name = self.table.item(row, 0).text()
-        variable = self.variable_manager.get_variable_with_comment(name)
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка добавления переменной: {str(e)}")
 
-        if variable:
-            self.name_edit.setText(variable.name)
-            self.value_edit.setText(variable.value)
-            self.comment_edit.setText(variable.comment)
+    def edit_variable(self):
+        """Редактирование переменной"""
+        try:
+            button = self.sender()
+            row = button.property("row_index")
+            name = self.table.item(row, 0).text()
+            variable = self.variable_manager.get_variable_with_comment(name)
+
+            if variable:
+                self.name_edit.setText(variable.name)
+                self.value_edit.setText(variable.value)
+                self.comment_edit.setText(variable.comment)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка редактирования переменной: {str(e)}")
 
     def update_variable(self):
-        name = self.name_edit.text().strip()
-        value = self.value_edit.text().strip()
-        comment = self.comment_edit.text().strip()
+        """Обновление переменной"""
+        try:
+            name = self.name_edit.text().strip()
+            value = self.value_edit.text().strip()
+            comment = self.comment_edit.text().strip()
 
-        if not name or not value:
-            QMessageBox.warning(self, "Ошибка", "Заполните имя и значение переменной")
-            return
+            if not name or not value:
+                QMessageBox.warning(self, "Ошибка", "Заполните имя и значение переменной")
+                return
 
-        self.variable_manager.set_variable(name, value, comment)
-        self.load_variables()
-        self.clear_form()
-        QMessageBox.information(self, "Успех", f"Переменная '{name}' обновлена")
-
-    def delete_variable(self, row):
-        name = self.table.item(row, 0).text()
-
-        reply = QMessageBox.question(
-            self,
-            "Подтверждение удаления",
-            f"Удалить переменную '{name}'?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-
-        if reply == QMessageBox.StandardButton.Yes:
-            self.variable_manager.remove_variable(name)
+            self.variable_manager.set_variable(name, value, comment)
             self.load_variables()
-            QMessageBox.information(self, "Успех", f"Переменная '{name}' удалена")
+            self.clear_form()
+            QMessageBox.information(self, "Успех", f"Переменная '{name}' обновлена")
 
-    def use_variable(self, row):
-        name = self.table.item(row, 0).text()
-        variable = self.variable_manager.get_variable_with_comment(name)
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка обновления переменной: {str(e)}")
 
-        if variable:
-            # Вставляем шаблон переменной в буфер обмена
-            import pyperclip
+    def delete_variable(self):
+        """Удаление переменной"""
+        try:
+            button = self.sender()
+            row = button.property("row_index")
+            name = self.table.item(row, 0).text()
+
+            reply = QMessageBox.question(
+                self,
+                "Подтверждение удаления",
+                f"Удалить переменную '{name}'?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                self.variable_manager.remove_variable(name)
+                self.load_variables()
+                QMessageBox.information(self, "Успех", f"Переменная '{name}' удалена")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка удаления переменной: {str(e)}")
+
+    def use_variable(self):
+        """Использование переменной"""
+        try:
+            button = self.sender()
+            row = button.property("row_index")
+            name = self.table.item(row, 0).text()
+
             template = f"$({name})"
-            pyperclip.copy(template)
-            QMessageBox.information(self, "Успех", f"Шаблон '{template}' скопирован в буфер обмена")
+            QMessageBox.information(
+                self,
+                "Шаблон переменной",
+                f"Шаблон для использования:\n\n{template}\n\nСкопируйте его в нужное поле."
+            )
+
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка использования переменной: {str(e)}")
 
     def clear_form(self):
+        """Очистка формы"""
         self.name_edit.clear()
         self.value_edit.clear()
         self.comment_edit.clear()

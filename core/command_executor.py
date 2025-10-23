@@ -13,15 +13,15 @@ class RACCommandExecutor:
 
     def execute_command(self, args: List[str], host: str = "localhost", port: int = 1545) -> Tuple[bool, str]:
         """Выполнение RAC команды с подстановкой переменных"""
-        # Подставляем переменные в аргументы
-        substituted_args = [self.variable_manager.substitute_variables(arg) for arg in args]
-
-        full_command = [self.rac_path] + substituted_args + [f"{host}:{port}"]
-        command_str = " ".join(full_command)
-
-        self.logger.log_command(command_str, "RAC_EXECUTOR")
-
         try:
+            # Подставляем переменные в аргументы
+            substituted_args = [self.variable_manager.substitute_variables(arg) for arg in args]
+
+            full_command = [self.rac_path] + substituted_args + [f"{host}:{port}"]
+            command_str = " ".join(full_command)
+
+            self.logger.log_command(command_str, "RAC_EXECUTOR")
+
             result = subprocess.run(
                 full_command,
                 capture_output=True,
@@ -31,6 +31,7 @@ class RACCommandExecutor:
                 timeout=30
             )
             return True, result.stdout
+
         except subprocess.CalledProcessError as e:
             error_msg = f"Ошибка выполнения команды: {e.stderr}"
             self.logger.log_error(error_msg, "RAC_EXECUTOR")
@@ -61,6 +62,8 @@ class RACCommandExecutor:
                 if isinstance(value, bool) and value:
                     args.append(f"--{key}")
                 elif not isinstance(value, bool):
-                    args.append(f"--{key}={value}")
+                    # Экранируем специальные символы
+                    safe_value = str(value).replace('"', '\\"')
+                    args.append(f"--{key}={safe_value}")
 
         return args

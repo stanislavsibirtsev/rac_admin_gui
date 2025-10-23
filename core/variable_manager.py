@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, asdict
 
 
@@ -85,7 +85,7 @@ class VariableManager:
         pattern = r'\$\(([^)]+)\)'
         return re.sub(pattern, replace_match, text)
 
-    def validate_variable_name(self, name: str):
+    def validate_variable_name(self, name: str) -> Tuple[bool, str]:
         """Валидация имени переменной"""
         if not name:
             return False, "Имя переменной не может быть пустым"

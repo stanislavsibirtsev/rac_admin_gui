@@ -10,6 +10,15 @@ from core.command_executor import RACCommandExecutor
 from core.logger import RACLogger
 
 
+class TabData:
+    """Класс для хранения данных вкладки"""
+
+    def __init__(self):
+        self.param_widgets = {}
+        self.preview_text = None
+        self.command = None
+
+
 class CommandDialog(QDialog):
     command_executed = pyqtSignal(bool, str, str)  # success, command, output
 
@@ -21,8 +30,8 @@ class CommandDialog(QDialog):
         self.executor = executor
         self.logger = logger
 
-        # Словарь для хранения виджетов параметров по индексу вкладки
-        self.tab_param_widgets = {}
+        # Список для хранения данных вкладок
+        self.tabs_data = []
 
         self.setWindowTitle(f"RAC {mode} - Команды администрирования")
         self.setMinimumSize(800, 600)
@@ -38,6 +47,10 @@ class CommandDialog(QDialog):
         self.tab_widget = QTabWidget()
 
         for i, command in enumerate(self.commands):
+            tab_data = TabData()
+            tab_data.command = command
+            self.tabs_data.append(tab_data)
+
             tab = self.create_command_tab(command, i)
             self.tab_widget.addTab(tab, command.command)
 
@@ -48,9 +61,8 @@ class CommandDialog(QDialog):
 
     def on_tab_changed(self, index):
         """Обработчик переключения вкладок"""
-        if 0 <= index < len(self.commands):
-            command = self.commands[index]
-            self.update_command_preview(command)
+        if 0 <= index < len(self.tabs_data):
+            self.update_command_preview(index)
 
     def create_command_tab(self, command: RacCommand, tab_index: int) -> QWidget:
         """Создание вкладки для команды"""
@@ -67,13 +79,12 @@ class CommandDialog(QDialog):
         scroll_widget = QWidget()
         scroll_layout = QFormLayout(scroll_widget)
 
-        # Поля для параметров - сохраняем в словарь для этой вкладки
-        param_widgets = {}
-        self.tab_param_widgets[tab_index] = param_widgets
+        # Поля для параметров
+        tab_data = self.tabs_data[tab_index]
 
         for param in command.parameters:
-            widget = self.create_param_widget(param)
-            param_widgets[param.name] = widget
+            widget = self.create_param_widget(param, tab_index)
+            tab_data.param_widgets[param.name] = widget
             label_text = f"{param.name}{'*' if param.required else ''}"
             scroll_layout.addRow(f"<b>{label_text}:</b>", widget)
             if param.description:
@@ -93,7 +104,6 @@ class CommandDialog(QDialog):
         preview_text.setReadOnly(True)
         preview_text.setMaximumHeight(100)
         preview_text.setFont(QFont("Courier New", 9))
-        preview_text.setProperty("tab_index", tab_index)  # Сохраняем индекс вкладки
         preview_layout.addWidget(preview_text)
 
         layout.addWidget(preview_group)
@@ -104,9 +114,8 @@ class CommandDialog(QDialog):
         preview_button = QPushButton("Обновить предпросмотр")
         execute_button = QPushButton("Выполнить команду")
 
-        # Передаем tab_index в лямбда-функции
-        preview_button.clicked.connect(lambda: self.update_command_preview(command, tab_index))
-        execute_button.clicked.connect(lambda: self.execute_command(command, tab_index))
+        preview_button.clicked.connect(lambda: self.update_command_preview(tab_index))
+        execute_button.clicked.connect(lambda: self.execute_command(tab_index))
 
         button_layout.addWidget(preview_button)
         button_layout.addWidget(execute_button)
@@ -114,15 +123,15 @@ class CommandDialog(QDialog):
 
         layout.addLayout(button_layout)
 
-        # Сохраняем ссылку на preview_text для этой вкладки
-        self.tab_param_widgets[tab_index]['preview_text'] = preview_text
+        # Сохраняем ссылку на preview_text
+        tab_data.preview_text = preview_text
 
         # Первоначальное обновление предпросмотра
-        self.update_command_preview(command, tab_index)
+        self.update_command_preview(tab_index)
 
         return tab
 
-    def create_param_widget(self, param: CommandParam):
+    def create_param_widget(self, param: CommandParam, tab_index: int):
         """Создание виджета для параметра"""
         if param.param_type == ParamType.BOOLEAN:
             widget = QCheckBox()
@@ -139,8 +148,9 @@ class CommandDialog(QDialog):
             if param.default_value:
                 widget.setText(str(param.default_value))
 
-        # Сохраняем тип параметра в свойстве виджета
+        # Сохраняем тип параметра и индекс вкладки в свойстве виджета
         widget.setProperty("param_type", param.param_type)
+        widget.setProperty("tab_index", tab_index)
 
         # Подключаем обновление предпросмотра при изменении
         if hasattr(widget, 'textChanged'):
@@ -153,33 +163,48 @@ class CommandDialog(QDialog):
         return widget
 
     def on_parameter_changed(self):
-        """Обработчик изменения параметра - обновляет текущую вкладку"""
-        current_index = self.tab_widget.currentIndex()
-        if 0 <= current_index < len(self.commands):
-            command = self.commands[current_index]
-            self.update_command_preview(command, current_index)
+        """Обработчик изменения параметра"""
+        widget = self.sender()
+        if widget:
+            tab_index = widget.property("tab_index")
+            if tab_index is not None and 0 <= tab_index < len(self.tabs_data):
+                self.update_command_preview(tab_index)
 
-    def update_command_preview(self, command: RacCommand, tab_index: int):
+    def update_command_preview(self, tab_index: int):
         """Обновление предпросмотра команды для указанной вкладки"""
-        params = self.get_current_parameters(command, tab_index)
+        if tab_index < 0 or tab_index >= len(self.tabs_data):
+            return
+
+        tab_data = self.tabs_data[tab_index]
+        command = tab_data.command
+
+        if not command or not tab_data.preview_text:
+            return
+
+        params = self.get_current_parameters(tab_index)
         args = self.executor.build_command_args(self.mode, command.command, params)
         command_str = "rac " + " ".join(args)
 
-        # Получаем preview_text для конкретной вкладки
-        preview_text = self.tab_param_widgets[tab_index].get('preview_text')
-        if preview_text:
-            preview_text.setPlainText(command_str)
+        tab_data.preview_text.setPlainText(command_str)
 
-    def get_current_parameters(self, command: RacCommand, tab_index: int) -> dict:
+    def get_current_parameters(self, tab_index: int) -> dict:
         """Получение текущих значений параметров для указанной вкладки"""
-        param_widgets = self.tab_param_widgets.get(tab_index, {})
+        if tab_index < 0 or tab_index >= len(self.tabs_data):
+            return {}
+
+        tab_data = self.tabs_data[tab_index]
+        command = tab_data.command
         params = {}
 
+        if not command:
+            return params
+
         for param in command.parameters:
-            widget = param_widgets.get(param.name)
+            widget = tab_data.param_widgets.get(param.name)
             if widget:
                 if param.param_type == ParamType.BOOLEAN:
-                    params[param.name] = widget.isChecked()
+                    if widget.isChecked():
+                        params[param.name] = True
                 elif param.param_type == ParamType.ENUM:
                     value = widget.currentText()
                     if value:
@@ -191,9 +216,18 @@ class CommandDialog(QDialog):
 
         return params
 
-    def execute_command(self, command: RacCommand, tab_index: int):
+    def execute_command(self, tab_index: int):
         """Выполнение команды для указанной вкладки"""
-        params = self.get_current_parameters(command, tab_index)
+        if tab_index < 0 or tab_index >= len(self.tabs_data):
+            return
+
+        tab_data = self.tabs_data[tab_index]
+        command = tab_data.command
+
+        if not command:
+            return
+
+        params = self.get_current_parameters(tab_index)
 
         # Проверка обязательных параметров
         missing_required = []
