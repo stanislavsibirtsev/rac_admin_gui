@@ -12,8 +12,8 @@ from core.command_executor import RACCommandExecutor
 from ui.command_dialogs import CommandDialog
 
 class MainWindow(QMainWindow):
-    def init(self):
-        super().init()
+    def __init__(self):
+        super().__init__()
         self.rac_commands = RACCommands.get_all_commands()
         self.logger = RACLogger()
         self.command_executor = RACCommandExecutor("rac.exe", self.logger)

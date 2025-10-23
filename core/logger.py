@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 class RACLogger:
-    def init(self, log_dir: str = "logs"):
+    def __init__(self, log_dir: str = "logs"):
         self.log_dir = log_dir
         self._setup_logging()
     

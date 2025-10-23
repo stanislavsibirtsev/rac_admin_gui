@@ -12,9 +12,9 @@ from core.logger import RACLogger
 class CommandDialog(QDialog):
     command_executed = pyqtSignal(bool, str, str)  # success, command, output
     
-    def init(self, mode: str, commands: list, executor: RACCommandExecutor, 
+    def __init__(self, mode: str, commands: list, executor: RACCommandExecutor,
                  logger: RACLogger, parent=None):
-        super().init(parent)
+        super().__init__(parent)
         self.mode = mode
         self.commands = commands
         self.executor = executor

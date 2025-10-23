@@ -4,7 +4,7 @@ from typing import Tuple, List
 from .logger import RACLogger
 
 class RACCommandExecutor:
-    def init(self, rac_path: str, logger: RACLogger):
+    def __init__(self, rac_path: str, logger: RACLogger):
         self.rac_path = rac_path
         self.logger = logger
     
