@@ -26,7 +26,7 @@ class VariableManager:
         """Инициализация зарезервированных переменных"""
         reserved_vars = {
             "rac_path": {
-                "value": "rac.exe",
+                "value": "rac.exe",  # Будет перезаписано пользователем
                 "comment": "Путь к утилите RAC (rac.exe)",
                 "reserved": True
             },
@@ -36,13 +36,13 @@ class VariableManager:
                 "reserved": True
             },
             "default_host": {
-                "value": "localhost",
-                "comment": "Хост по умолчанию",
+                "value": "localhost",  # Значение по умолчанию
+                "comment": "Хост по умолчанию для подключения",
                 "reserved": True
             },
             "default_port": {
-                "value": "1545",
-                "comment": "Порт по умолчанию",
+                "value": "1545",  # Значение по умолчанию
+                "comment": "Порт по умолчанию для подключения",
                 "reserved": True
             }
         }

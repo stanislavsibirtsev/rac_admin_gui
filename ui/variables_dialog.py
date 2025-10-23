@@ -13,7 +13,7 @@ class VariablesDialog(QDialog):
     def __init__(self, variable_manager: VariableManager, parent=None):
         super().__init__(parent)
         self.variable_manager = variable_manager
-        self.current_editing_name = None  # Для отслеживания редактируемой переменной
+        self.current_editing_name = None
         self.setWindowTitle("Управление переменными")
         self.setMinimumSize(700, 500)
         self.init_ui()
@@ -76,7 +76,7 @@ class VariablesDialog(QDialog):
         self.update_button.clicked.connect(self.update_variable)
         self.clear_button.clicked.connect(self.clear_form)
 
-        self.update_button.setEnabled(False)  # Изначально кнопка обновления отключена
+        self.update_button.setEnabled(False)
 
         button_layout.addWidget(self.add_button)
         button_layout.addWidget(self.update_button)
@@ -141,15 +141,18 @@ class VariablesDialog(QDialog):
         layout.addWidget(form_group)
 
         # Таблица системных переменных
-        table_group = QGroupBox("Системные переменные (только чтение)")
+        table_group = QGroupBox("Системные переменные")
         table_layout = QVBoxLayout(table_group)
 
-        self.system_table = QTableWidget(0, 3)
-        self.system_table.setHorizontalHeaderLabels(["Имя", "Значение", "Назначение"])
+        self.system_table = QTableWidget(0, 4)
+        self.system_table.setHorizontalHeaderLabels(["Имя", "Значение", "Назначение", "Действия"])
         self.system_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.system_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.system_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        self.system_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.system_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+
+        # Подключаем обработчик клика по таблице системных переменных
+        self.system_table.cellClicked.connect(self.on_system_cell_clicked)
 
         table_layout.addWidget(self.system_table)
         layout.addWidget(table_group)
@@ -199,7 +202,7 @@ class VariablesDialog(QDialog):
             for row, variable in enumerate(variables):
                 # Имя переменной
                 name_item = QTableWidgetItem(variable.name)
-                name_item.setBackground(QColor(240, 240, 240))  # Серый фон
+                name_item.setBackground(QColor(240, 240, 240))
                 self.system_table.setItem(row, 0, name_item)
 
                 # Значение
@@ -208,8 +211,12 @@ class VariablesDialog(QDialog):
 
                 # Комментарий
                 comment_item = QTableWidgetItem(variable.comment)
-                comment_item.setBackground(QColor(240, 240, 240))  # Серый фон
+                comment_item.setBackground(QColor(240, 240, 240))
                 self.system_table.setItem(row, 2, comment_item)
+
+                # Кнопка использования
+                use_widget = self.create_system_use_button(row, variable.name)
+                self.system_table.setCellWidget(row, 3, use_widget)
 
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Ошибка загрузки системных переменных: {str(e)}")
@@ -237,6 +244,34 @@ class VariablesDialog(QDialog):
         layout.addWidget(use_btn)
 
         return widget
+
+    def create_system_use_button(self, row, var_name):
+        """Создание кнопки использования для системных переменных"""
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(2, 2, 2, 2)
+
+        use_btn = QPushButton("Использовать")
+        use_btn.setProperty("row_index", row)
+        use_btn.clicked.connect(lambda: self.use_variable(var_name))
+
+        layout.addWidget(use_btn)
+        return widget
+
+    def on_system_cell_clicked(self, row, column):
+        """Обработчик клика по ячейке системной таблицы"""
+        try:
+            if column != 3:  # Не обрабатываем клик по кнопке "Использовать"
+                name = self.system_table.item(row, 0).text()
+                value = self.system_table.item(row, 1).text()
+                comment = self.system_table.item(row, 2).text()
+
+                self.sys_name_edit.setText(name)
+                self.sys_value_edit.setText(value)
+                self.sys_comment_edit.setText(comment)
+
+        except Exception as e:
+            print(f"Ошибка при выборе системной переменной: {e}")
 
     def on_name_changed(self):
         """Обработчик изменения имени переменной - проверка на существование"""
@@ -361,6 +396,29 @@ class VariablesDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Ошибка удаления переменной: {str(e)}")
 
+    def update_system_variable(self):
+        """Обновление системной переменной"""
+        try:
+            name = self.sys_name_edit.text().strip()
+            value = self.sys_value_edit.text().strip()
+
+            if not name or not value:
+                QMessageBox.warning(self, "Ошибка", "Заполните значение переменной")
+                return
+
+            # Для системных переменных можно менять только значение
+            existing_var = self.variable_manager.get_variable_with_comment(name)
+            if existing_var and existing_var.reserved:
+                self.variable_manager.set_variable(name, value, existing_var.comment, reserved=True)
+                self.load_variables()
+                self.clear_system_form()
+                QMessageBox.information(self, "Успех", f"Системная переменная '{name}' обновлена")
+            else:
+                QMessageBox.warning(self, "Ошибка", "Нельзя изменить несистемную переменную в этом разделе")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка обновления системной переменной: {str(e)}")
+
     def use_variable(self, var_name):
         """Использование переменной - с возможностью копирования"""
         try:
@@ -379,7 +437,7 @@ class VariablesDialog(QDialog):
 
             # Поле с шаблоном (можно копировать)
             template_edit = QLineEdit(template)
-            template_edit.selectAll()  # Автоматически выделяем весь текст
+            template_edit.selectAll()
             template_edit.setFont(QFont("Courier New", 10))
             layout.addWidget(template_edit)
 
@@ -433,37 +491,3 @@ class VariablesDialog(QDialog):
         self.sys_name_edit.clear()
         self.sys_value_edit.clear()
         self.sys_comment_edit.clear()
-
-    # Обработчики для системных переменных
-    def on_system_cell_clicked(self, row, column):
-        """Обработчик клика по ячейке системной таблицы"""
-        try:
-            name = self.system_table.item(row, 0).text()
-            value = self.system_table.item(row, 1).text()
-            comment = self.system_table.item(row, 2).text()
-
-            self.sys_name_edit.setText(name)
-            self.sys_value_edit.setText(value)
-            self.sys_comment_edit.setText(comment)
-
-        except Exception as e:
-            print(f"Ошибка при выборе системной переменной: {e}")
-
-    def update_system_variable(self):
-        """Обновление системной переменной"""
-        try:
-            name = self.sys_name_edit.text().strip()
-            value = self.sys_value_edit.text().strip()
-
-            if not name or not value:
-                QMessageBox.warning(self, "Ошибка", "Заполните значение переменной")
-                return
-
-            # Для системных переменных можно менять только значение
-            self.variable_manager.set_variable(name, value, "", reserved=True)
-            self.load_variables()
-            self.clear_system_form()
-            QMessageBox.information(self, "Успех", f"Системная переменная '{name}' обновлена")
-
-        except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Ошибка обновления системной переменной: {str(e)}")
