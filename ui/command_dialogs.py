@@ -171,7 +171,7 @@ class CommandDialog(QDialog):
                 self.update_command_preview(tab_index)
 
     def update_command_preview(self, tab_index: int):
-        """Обновление предпросмотра команды для указанной вкладки"""
+        """Обновление предпросмотра команды для указанной вкладки с подстановкой переменных"""
         if tab_index < 0 or tab_index >= len(self.tabs_data):
             return
 
@@ -183,9 +183,20 @@ class CommandDialog(QDialog):
 
         params = self.get_current_parameters(tab_index)
         args = self.executor.build_command_args(self.mode, command.command, params)
+
+        # Формируем команду с подстановкой переменных
         command_str = "rac " + " ".join(args)
 
-        tab_data.preview_text.setPlainText(command_str)
+        # Подставляем переменные для отображения
+        command_str_with_vars = self.executor.variable_manager.substitute_variables(command_str)
+
+        # Форматируем вывод: показываем и исходную команду, и команду с подстановкой
+        if command_str != command_str_with_vars:
+            display_text = f"Исходная команда:\n{command_str}\n\nКоманда с подстановкой переменных:\n{command_str_with_vars}"
+        else:
+            display_text = command_str
+
+        tab_data.preview_text.setPlainText(display_text)
 
     def get_current_parameters(self, tab_index: int) -> dict:
         """Получение текущих значений параметров для указанной вкладки"""

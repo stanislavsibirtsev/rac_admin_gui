@@ -73,13 +73,23 @@ class VariableManager:
         return list(self.variables.values())
 
     def substitute_variables(self, text: str) -> str:
-        """Подстановка переменных в текст используя синтаксис $(variable_name)"""
+        """Подстановка переменных в текст используя синтаксис $(variable_name)
+        Автоматически обрамляет в кавычки значения с пробелами"""
         if not text:
             return text
 
         def replace_match(match):
             var_name = match.group(1)
-            return self.get_variable(var_name) or match.group(0)
+            value = self.get_variable(var_name)
+
+            if value is None:
+                return match.group(0)  # Оставляем как есть, если переменная не найдена
+
+            # Если значение содержит пробелы, обрамляем в кавычки
+            if ' ' in value and not (value.startswith('"') and value.endswith('"')):
+                return f'"{value}"'
+            else:
+                return value
 
         # Регулярное выражение для поиска $(variable_name)
         pattern = r'\$\(([^)]+)\)'

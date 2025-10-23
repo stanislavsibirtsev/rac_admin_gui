@@ -12,18 +12,24 @@ class RACCommandExecutor:
         self.variable_manager = variable_manager
 
     def execute_command(self, args: List[str], host: str = "localhost", port: int = 1545) -> Tuple[bool, str]:
-        """Выполнение RAC команды с подстановкой переменных"""
+        """Выполнение RAC команды с подстановкой переменных и правильной обработкой кавычек"""
         try:
-            # Подставляем переменные в аргументы
-            substituted_args = [self.variable_manager.substitute_variables(arg) for arg in args]
+            # Сначала строим аргументы с подстановкой переменных
+            substituted_args = []
+            for arg in args:
+                # Подставляем переменные
+                substituted_arg = self.variable_manager.substitute_variables(arg)
+                substituted_args.append(substituted_arg)
 
             full_command = [self.rac_path] + substituted_args + [f"{host}:{port}"]
             command_str = " ".join(full_command)
 
             self.logger.log_command(command_str, "RAC_EXECUTOR")
 
+            # Для выполнения используем исходные substituted_args (без shell=True)
+            # subprocess сам правильно обработает аргументы
             result = subprocess.run(
-                full_command,
+                [self.rac_path] + substituted_args + [f"{host}:{port}"],
                 capture_output=True,
                 text=True,
                 encoding='utf-8',
@@ -46,7 +52,7 @@ class RACCommandExecutor:
             return False, error_msg
 
     def build_command_args(self, mode: str, command: str, parameters: dict) -> List[str]:
-        """Построение аргументов команды из параметров"""
+        """Построение аргументов команды из параметров с учетом переменных"""
         args = [mode]
 
         # Добавляем подкоманды если есть
@@ -62,8 +68,15 @@ class RACCommandExecutor:
                 if isinstance(value, bool) and value:
                     args.append(f"--{key}")
                 elif not isinstance(value, bool):
-                    # Экранируем специальные символы
-                    safe_value = str(value).replace('"', '\\"')
-                    args.append(f"--{key}={safe_value}")
+                    # Подставляем переменные в значение
+                    substituted_value = self.variable_manager.substitute_variables(str(value))
+
+                    # Если значение содержит пробелы и не в кавычках, обрамляем в кавычки
+                    final_value = substituted_value
+                    if ' ' in substituted_value and not (
+                            substituted_value.startswith('"') and substituted_value.endswith('"')):
+                        final_value = f'"{substituted_value}"'
+
+                    args.append(f"--{key}={final_value}")
 
         return args

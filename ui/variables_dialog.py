@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTableWidget,
                              QDialogButtonBox, QGroupBox, QWidget)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QApplication
 
 from core.variable_manager import VariableManager, Variable
 
@@ -207,21 +208,66 @@ class VariablesDialog(QDialog):
             QMessageBox.critical(self, "Ошибка", f"Ошибка удаления переменной: {str(e)}")
 
     def use_variable(self):
-        """Использование переменной"""
+        """Использование переменной - с возможностью копирования"""
         try:
             button = self.sender()
             row = button.property("row_index")
             name = self.table.item(row, 0).text()
 
             template = f"$({name})"
-            QMessageBox.information(
-                self,
-                "Шаблон переменной",
-                f"Шаблон для использования:\n\n{template}\n\nСкопируйте его в нужное поле."
-            )
+
+            # Создаем диалог с полем для копирования
+            copy_dialog = QDialog(self)
+            copy_dialog.setWindowTitle("Копирование шаблона переменной")
+            copy_dialog.setMinimumWidth(400)
+
+            layout = QVBoxLayout(copy_dialog)
+
+            # Инструкция
+            instruction = QLabel(f"Шаблон для переменной '{name}':")
+            layout.addWidget(instruction)
+
+            # Поле с шаблоном (можно копировать)
+            template_edit = QLineEdit(template)
+            template_edit.selectAll()  # Автоматически выделяем весь текст
+            template_edit.setFont(QFont("Courier New", 10))
+            layout.addWidget(template_edit)
+
+            # Кнопки
+            button_layout = QHBoxLayout()
+            copy_button = QPushButton("📋 Копировать")
+            close_button = QPushButton("Закрыть")
+
+            copy_button.clicked.connect(lambda: self.copy_to_clipboard(template, copy_dialog))
+            close_button.clicked.connect(copy_dialog.accept)
+
+            button_layout.addWidget(copy_button)
+            button_layout.addWidget(close_button)
+            layout.addLayout(button_layout)
+
+            # Фокусируемся на поле ввода для удобного копирования
+            template_edit.setFocus()
+
+            copy_dialog.exec()
 
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Ошибка использования переменной: {str(e)}")
+
+    def copy_to_clipboard(self, text: str, dialog: QDialog):
+        """Копирование текста в буфер обмена"""
+        try:
+            import pyperclip
+            pyperclip.copy(text)
+            QMessageBox.information(dialog, "Успех", "Шаблон скопирован в буфер обмена!")
+            dialog.accept()
+        except ImportError:
+            # Если pyperclip не установлен, используем QClipboard
+            clipboard = QApplication.clipboard()
+            clipboard.setText(text)
+            QMessageBox.information(dialog, "Успех", "Шаблон скопирован в буфер обмена!")
+            dialog.accept()
+        except Exception as e:
+            QMessageBox.critical(dialog, "Ошибка", f"Не удалось скопировать: {str(e)}")
 
     def clear_form(self):
         """Очистка формы"""

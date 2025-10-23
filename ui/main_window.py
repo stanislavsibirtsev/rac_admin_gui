@@ -113,9 +113,26 @@ class MainWindow(QMainWindow):
         return panel
 
     def create_service_panel(self) -> QWidget:
-        """Создание панели управления службой RAS"""
+        """Создание панели управления службой RAS с индикацией прав"""
         panel = QGroupBox("Управление службой RAS")
         layout = QVBoxLayout(panel)
+
+        # Проверяем права (с обработкой возможной ошибки)
+        try:
+            self.has_admin_rights = self.service_manager.can_manage_services()
+        except AttributeError:
+            # Если метод не существует, используем fallback
+            self.has_admin_rights = False
+
+        # Статус прав
+        rights_layout = QHBoxLayout()
+        rights_icon = QLabel("🛡️" if self.has_admin_rights else "⚠️")
+        rights_label = QLabel("Права администратора" if self.has_admin_rights else "Ограниченные права")
+        rights_label.setStyleSheet("color: green;" if self.has_admin_rights else "color: orange;")
+
+        rights_layout.addWidget(rights_icon)
+        rights_layout.addWidget(rights_label)
+        rights_layout.addStretch()
 
         # Статус службы
         status_layout = QHBoxLayout()
@@ -145,14 +162,31 @@ class MainWindow(QMainWindow):
         self.restart_service_btn.clicked.connect(self.restart_ras_service)
         self.refresh_status_btn.clicked.connect(self.check_service_status)
 
+        # Отключаем кнопки управления если нет прав
+        if not self.has_admin_rights:
+            self.start_service_btn.setEnabled(False)
+            self.stop_service_btn.setEnabled(False)
+            self.restart_service_btn.setEnabled(False)
+            self.start_service_btn.setToolTip("Требуются права администратора")
+            self.stop_service_btn.setToolTip("Требуются права администратора")
+            self.restart_service_btn.setToolTip("Требуются права администратора")
+
         buttons_layout.addWidget(self.start_service_btn)
         buttons_layout.addWidget(self.stop_service_btn)
         buttons_layout.addWidget(self.restart_service_btn)
         buttons_layout.addWidget(self.refresh_status_btn)
 
+        layout.addLayout(rights_layout)
         layout.addLayout(service_name_layout)
         layout.addLayout(status_layout)
         layout.addLayout(buttons_layout)
+
+        # Информация о правах
+        if not self.has_admin_rights:
+            info_label = QLabel("💡 Для управления службой запустите приложение от имени администратора")
+            info_label.setStyleSheet("color: gray; font-size: 9pt;")
+            info_label.setWordWrap(True)
+            layout.addWidget(info_label)
 
         # Первоначальная проверка статуса
         self.check_service_status()
@@ -243,22 +277,27 @@ class MainWindow(QMainWindow):
         self.service_timer.start(5000)  # Проверка каждые 5 секунд
 
     def check_service_status(self):
-        """Проверка статуса службы"""
-        service_name = self.service_name_edit.text().strip() or self.ras_service_name
-        is_running, status_message = self.service_manager.get_service_status(service_name)
+        """Проверка статуса службы с обработкой ошибок"""
+        try:
+            service_name = self.service_name_edit.text().strip() or self.ras_service_name
+            is_running, status_message = self.service_manager.get_service_status(service_name)
 
-        if is_running:
-            self.service_status_indicator.setText("🟢")
-            self.service_status_label.setText(f"Запущена: {service_name}")
-            self.start_service_btn.setEnabled(False)
-            self.stop_service_btn.setEnabled(True)
-            self.restart_service_btn.setEnabled(True)
-        else:
-            self.service_status_indicator.setText("🔴")
-            self.service_status_label.setText(f"Остановлена: {status_message}")
-            self.start_service_btn.setEnabled(True)
-            self.stop_service_btn.setEnabled(False)
-            self.restart_service_btn.setEnabled(False)
+            if is_running:
+                self.service_status_indicator.setText("🟢")
+                self.service_status_label.setText(f"Запущена: {service_name}")
+                self.start_service_btn.setEnabled(False)
+                self.stop_service_btn.setEnabled(True)
+                self.restart_service_btn.setEnabled(True)
+            else:
+                self.service_status_indicator.setText("🔴")
+                self.service_status_label.setText(f"Остановлена: {status_message}")
+                self.start_service_btn.setEnabled(True)
+                self.stop_service_btn.setEnabled(False)
+                self.restart_service_btn.setEnabled(False)
+        except Exception as e:
+            self.service_status_indicator.setText("⚫")
+            self.service_status_label.setText(f"Ошибка проверки: {str(e)}")
+            self.logger.log_error(f"Ошибка проверки статуса службы: {e}", "SERVICE")
 
     def start_ras_service(self):
         """Запуск службы RAS"""
@@ -356,3 +395,20 @@ class MainWindow(QMainWindow):
         """Сохранение логов в файл"""
         # Реализация сохранения логов
         pass
+
+    def closeEvent(self, event):
+        """Обработчик закрытия приложения - корректное завершение"""
+        try:
+            # Останавливаем таймер мониторинга службы
+            if hasattr(self, 'service_timer') and self.service_timer.isActive():
+                self.service_timer.stop()
+
+            # Удаляем наш кастомный обработчик логов
+            if hasattr(self, 'log_handler'):
+                self.logger.logger.removeHandler(self.log_handler)
+                self.log_handler = None
+
+        except Exception as e:
+            print(f"Ошибка при закрытии: {e}")
+
+        event.accept()
