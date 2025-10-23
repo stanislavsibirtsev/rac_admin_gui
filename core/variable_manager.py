@@ -10,15 +10,53 @@ class Variable:
     name: str
     value: str
     comment: str = ""
+    reserved: bool = False  # Флаг зарезервированной переменной
 
 
 class VariableManager:
-    """Менеджер для работы с переменными"""
+    """Менеджер для работы с переменными с поддержкой зарезервированных переменных"""
 
     def __init__(self, config_file: str = "config/variables.json"):
         self.config_file = config_file
         self.variables: Dict[str, Variable] = {}
         self.load_variables()
+        self.initialize_reserved_variables()
+
+    def initialize_reserved_variables(self):
+        """Инициализация зарезервированных переменных"""
+        reserved_vars = {
+            "rac_path": {
+                "value": "rac.exe",
+                "comment": "Путь к утилите RAC (rac.exe)",
+                "reserved": True
+            },
+            "ras_service": {
+                "value": "1C:Enterprise 8.3 Remote Server",
+                "comment": "Имя службы RAS",
+                "reserved": True
+            },
+            "default_host": {
+                "value": "localhost",
+                "comment": "Хост по умолчанию",
+                "reserved": True
+            },
+            "default_port": {
+                "value": "1545",
+                "comment": "Порт по умолчанию",
+                "reserved": True
+            }
+        }
+
+        for name, config in reserved_vars.items():
+            if name not in self.variables:
+                self.variables[name] = Variable(
+                    name=name,
+                    value=config["value"],
+                    comment=config["comment"],
+                    reserved=config["reserved"]
+                )
+
+        self.save_variables()
 
     def load_variables(self):
         """Загрузка переменных из файла"""
@@ -48,9 +86,18 @@ class VariableManager:
         except Exception as e:
             print(f"Ошибка сохранения переменных: {e}")
 
-    def set_variable(self, name: str, value: str, comment: str = ""):
+    def set_variable(self, name: str, value: str, comment: str = "", reserved: bool = False):
         """Установка переменной"""
-        self.variables[name] = Variable(name=name, value=value, comment=comment)
+        # Для зарезервированных переменных обновляем только значение
+        if name in self.variables and self.variables[name].reserved:
+            self.variables[name].value = value
+        else:
+            self.variables[name] = Variable(
+                name=name,
+                value=value,
+                comment=comment,
+                reserved=reserved
+            )
         self.save_variables()
 
     def get_variable(self, name: str) -> Optional[str]:
@@ -63,14 +110,25 @@ class VariableManager:
         return self.variables.get(name)
 
     def remove_variable(self, name: str):
-        """Удаление переменной"""
-        if name in self.variables:
+        """Удаление переменной (нельзя удалять зарезервированные)"""
+        var = self.variables.get(name)
+        if var and not var.reserved:
             del self.variables[name]
             self.save_variables()
+            return True
+        return False
 
     def get_all_variables(self) -> List[Variable]:
         """Получение всех переменных"""
         return list(self.variables.values())
+
+    def get_reserved_variables(self) -> List[Variable]:
+        """Получение зарезервированных переменных"""
+        return [var for var in self.variables.values() if var.reserved]
+
+    def get_user_variables(self) -> List[Variable]:
+        """Получение пользовательских переменных"""
+        return [var for var in self.variables.values() if not var.reserved]
 
     def substitute_variables(self, text: str) -> str:
         """Подстановка переменных в текст используя синтаксис $(variable_name)
@@ -101,4 +159,10 @@ class VariableManager:
             return False, "Имя переменной не может быть пустым"
         if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', name):
             return False, "Имя переменной может содержать только буквы, цифры и подчеркивания"
+
+        # Проверяем, не является ли имя зарезервированным (если оно уже существует)
+        existing_var = self.variables.get(name)
+        if existing_var and existing_var.reserved:
+            return False, f"Имя '{name}' зарезервировано системой"
+
         return True, ""
