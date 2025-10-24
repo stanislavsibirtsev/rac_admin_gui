@@ -62,6 +62,8 @@ class RACCommands:
                 command="help",
                 description="Отображение справочной информации для указанного режима",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("mode", ParamType.STRING, False, "Режим для получения справки"),
                     CommandParam("version", ParamType.BOOLEAN, False, "Получение версии утилиты", short_name="v"),
                     CommandParam("help", ParamType.BOOLEAN, False, "Краткая информация об утилите", short_name="?")
@@ -77,6 +79,8 @@ class RACCommands:
                 command="admin list",
                 description="Получение списка администраторов агента кластера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("agent-user", ParamType.STRING, False, "Имя администратора агента"),
                     CommandParam("agent-pwd", ParamType.PASSWORD, False, "Пароль администратора агента")
                 ]
@@ -86,6 +90,8 @@ class RACCommands:
                 command="admin register",
                 description="Добавление нового администратора агента кластера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("agent-user", ParamType.STRING, False, "Имя администратора агента"),
                     CommandParam("agent-pwd", ParamType.PASSWORD, False, "Пароль администратора агента"),
                     CommandParam("name", ParamType.STRING, True, "Имя администратора"),
@@ -100,6 +106,8 @@ class RACCommands:
                 command="admin remove",
                 description="Удаление администратора агента кластера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("agent-user", ParamType.STRING, False, "Имя администратора агента"),
                     CommandParam("agent-pwd", ParamType.PASSWORD, False, "Пароль администратора агента"),
                     CommandParam("name", ParamType.STRING, True, "Имя администратора агента")
@@ -110,6 +118,8 @@ class RACCommands:
                 command="version",
                 description="Получение версии агента кластера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("agent-user", ParamType.STRING, False, "Имя администратора агента"),
                     CommandParam("agent-pwd", ParamType.PASSWORD, False, "Пароль администратора агента")
                 ]
@@ -123,13 +133,18 @@ class RACCommands:
                 mode="cluster",
                 command="admin list",
                 description="Получение списка администраторов кластера",
-                parameters=[]
+                parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
+                ]
             ),
             RacCommand(
                 mode="cluster",
                 command="admin register",
                 description="Добавление нового администратора кластера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("name", ParamType.STRING, True, "Имя администратора"),
                     CommandParam("pwd", ParamType.PASSWORD, False, "Пароль администратора"),
                     CommandParam("descr", ParamType.STRING, False, "Описание администратора"),
@@ -144,6 +159,8 @@ class RACCommands:
                 command="admin remove",
                 description="Удаление администратора кластера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("name", ParamType.STRING, True, "Имя администратора кластера"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
@@ -155,6 +172,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации о кластере",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера")
                 ]
             ),
@@ -162,15 +181,18 @@ class RACCommands:
                 mode="cluster",
                 command="list",
                 description="Получение списка информации о кластерах",
-                parameters=[]
+                parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
+                ]
             ),
             RacCommand(
                 mode="cluster",
                 command="insert",
                 description="Регистрация нового кластера",
                 parameters=[
-                    CommandParam("host", ParamType.HOST, True, "Хост кластера"),
-                    CommandParam("port", ParamType.PORT, True, "Порт менеджера"),
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("name", ParamType.STRING, False, "Имя кластера"),
                     CommandParam("expiration-timeout", ParamType.INTEGER, False, "Период принудительного завершения (сек)"),
                     CommandParam("lifetime-limit", ParamType.INTEGER, False, "Период перезапуска процессов (сек)"),
@@ -191,6 +213,8 @@ class RACCommands:
                 command="update",
                 description="Обновление параметров кластера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("name", ParamType.STRING, False, "Имя кластера"),
                     CommandParam("expiration-timeout", ParamType.INTEGER, False, "Период принудительного завершения (сек)"),
@@ -212,6 +236,8 @@ class RACCommands:
                 command="remove",
                 description="Удаление кластера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера")
@@ -227,6 +253,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации о менеджере",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -238,6 +266,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка информации о менеджерах",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера")
@@ -253,6 +283,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации о рабочем сервере",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -264,6 +296,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка информации о рабочих серверах",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера")
@@ -274,6 +308,8 @@ class RACCommands:
                 command="insert",
                 description="Регистрация рабочего сервера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -302,6 +338,8 @@ class RACCommands:
                 command="update",
                 description="Изменение параметров рабочего сервера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -326,6 +364,8 @@ class RACCommands:
                 command="remove",
                 description="Удаление рабочего сервера",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -342,6 +382,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации о рабочем процессе",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -354,6 +396,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка информации о рабочих процессах",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластera"),
@@ -371,6 +415,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка информации о сервисах",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера")
@@ -386,6 +432,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации об информационной базе",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -399,6 +447,8 @@ class RACCommands:
                 command="summary info",
                 description="Получение краткой информации об указанной информационной базе",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -410,6 +460,8 @@ class RACCommands:
                 command="summary list",
                 description="Получение списка краткой информации об информационных базах",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластera"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера")
@@ -420,6 +472,8 @@ class RACCommands:
                 command="summary update",
                 description="Обновление краткой информации об информационной базе",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -432,6 +486,8 @@ class RACCommands:
                 command="create",
                 description="Создание информационной базы",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -455,6 +511,8 @@ class RACCommands:
                 command="update",
                 description="Обновление информации об информационной базе",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -491,6 +549,8 @@ class RACCommands:
                 command="drop",
                 description="Удаление информационной базы",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -511,6 +571,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации о соединении",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -522,6 +584,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка соединений",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -536,6 +600,8 @@ class RACCommands:
                 command="disconnect",
                 description="Разрыв соединения",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -555,6 +621,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации о сеансе",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -567,6 +635,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка информации о сеансах",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -579,6 +649,8 @@ class RACCommands:
                 command="terminate",
                 description="Принудительное завершение сеанса",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -591,6 +663,8 @@ class RACCommands:
                 command="interrupt-current-server-call",
                 description="Прерывание текущего серверного вызова",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластera"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -608,6 +682,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка информации о блокировках",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -626,6 +702,8 @@ class RACCommands:
                 command="apply",
                 description="Применение требований",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -638,6 +716,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации о требовании назначения",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -650,6 +730,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка требований назначения",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -661,6 +743,8 @@ class RACCommands:
                 command="insert",
                 description="Вставка нового требования назначения в список",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -678,6 +762,8 @@ class RACCommands:
                 command="update",
                 description="Обновление параметров существующего требования назначения в списке",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -696,6 +782,8 @@ class RACCommands:
                 command="remove",
                 description="Удаление требования назначения",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -713,6 +801,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка профилей безопасности",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера")
@@ -723,6 +813,8 @@ class RACCommands:
                 command="update",
                 description="Создание нового профиля безопасности или обновление параметров существующего",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -745,6 +837,8 @@ class RACCommands:
                 command="remove",
                 description="Удаление профиля безопасности",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -761,6 +855,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка счетчиков",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера")
@@ -771,6 +867,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации по счетчику",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -782,6 +880,8 @@ class RACCommands:
                 command="update",
                 description="Создание нового счетчика или обновление параметров существующего",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -809,6 +909,8 @@ class RACCommands:
                 command="values",
                 description="Вывод текущих значений счетчика потребления ресурсов",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -821,6 +923,8 @@ class RACCommands:
                 command="remove",
                 description="Удаление счетчика потребления ресурсов",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -832,6 +936,8 @@ class RACCommands:
                 command="clear",
                 description="Очистка значений счетчика",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -844,6 +950,8 @@ class RACCommands:
                 command="accumulated-values",
                 description="Получение списка накопленных значений счетчика",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -861,6 +969,8 @@ class RACCommands:
                 command="list",
                 description="Получение списка ограничений",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера")
@@ -871,6 +981,8 @@ class RACCommands:
                 command="info",
                 description="Получение информации по ограничению",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -882,6 +994,8 @@ class RACCommands:
                 command="update",
                 description="Создание нового ограничения или обновление параметров существующего",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),
@@ -908,6 +1022,8 @@ class RACCommands:
                 command="remove",
                 description="Удаление ограничения потребления ресурсов",
                 parameters=[
+                    CommandParam("host", ParamType.HOST, False, "Адрес сервера (по умолчанию: localhost)"),
+                    CommandParam("port", ParamType.PORT, False, "Порт сервера (по умолчанию: 1545)"),
                     CommandParam("cluster", ParamType.UUID, True, "Идентификатор кластера"),
                     CommandParam("cluster-user", ParamType.STRING, False, "Администратор кластера"),
                     CommandParam("cluster-pwd", ParamType.PASSWORD, False, "Пароль администратора кластера"),

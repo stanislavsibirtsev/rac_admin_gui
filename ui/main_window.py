@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
         self.rac_commands = RACCommands.get_all_commands()
         self.logger = RACLogger()
         self.variable_manager = VariableManager()
-        self.command_executor = RACCommandExecutor("rac.exe", self.logger, self.variable_manager)
+        self.command_executor = RACCommandExecutor(self.logger, self.variable_manager)
         self.service_manager = ServiceManager()
 
         # Настройки по умолчанию
@@ -72,6 +72,10 @@ class MainWindow(QMainWindow):
         title_label.setMaximumHeight(60)
         layout.addWidget(title_label)
 
+        # Панель пути к RAC
+        rac_panel = self.create_rac_path_panel()
+        layout.addWidget(rac_panel)
+
         # Панель управления службой
         service_panel = self.create_service_panel()
         layout.addWidget(service_panel)
@@ -111,6 +115,72 @@ class MainWindow(QMainWindow):
         layout.addWidget(scroll_area)
 
         return panel
+
+    def create_rac_path_panel(self) -> QWidget:
+        """Создание панели управления путем к RAC"""
+        panel = QGroupBox("Настройка пути к RAC")
+        layout = QVBoxLayout(panel)
+
+        # Путь к RAC
+        path_layout = QHBoxLayout()
+        path_layout.addWidget(QLabel("Путь к RAC:"))
+
+        self.rac_path_edit = QLineEdit()
+        self.rac_path_edit.setPlaceholderText("Например: C:\\Program Files\\1cv8\\8.3.24.1667\\bin\\rac.exe")
+        self.rac_path_edit.setText(self.variable_manager.get_variable("rac_path") or "rac.exe")
+        self.rac_path_edit.textChanged.connect(self.on_rac_path_changed)
+
+        browse_button = QPushButton("Обзор...")
+        browse_button.clicked.connect(self.browse_rac_path)
+
+        test_button = QPushButton("Тестировать")
+        test_button.clicked.connect(self.test_rac_connection)
+
+        path_layout.addWidget(self.rac_path_edit)
+        path_layout.addWidget(browse_button)
+        path_layout.addWidget(test_button)
+
+        # Статус RAC
+        self.rac_status_label = QLabel("Статус: Не проверен")
+        self.rac_status_label.setStyleSheet("color: gray;")
+
+        layout.addLayout(path_layout)
+        layout.addWidget(self.rac_status_label)
+
+        return panel
+
+    def on_rac_path_changed(self):
+        """Обработчик изменения пути к RAC"""
+        rac_path = self.rac_path_edit.text().strip()
+        if rac_path:
+            self.variable_manager.set_variable("rac_path", rac_path, "Путь к утилите RAC", reserved=True)
+
+    def browse_rac_path(self):
+        """Открытие диалога выбора файла RAC"""
+        from PyQt6.QtWidgets import QFileDialog
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Выберите файл rac.exe",
+            "",
+            "RAC Executable (rac.exe);;All Files (*)"
+        )
+
+        if file_path:
+            self.rac_path_edit.setText(file_path)
+
+    def test_rac_connection(self):
+        """Тестирование подключения к RAC"""
+        success, message = self.command_executor.test_rac_connection()
+
+        if success:
+            self.rac_status_label.setText("✅ " + message)
+            self.rac_status_label.setStyleSheet("color: green;")
+            QMessageBox.information(self, "Успех", message)
+        else:
+            self.rac_status_label.setText("❌ " + message)
+            self.rac_status_label.setStyleSheet("color: red;")
+            QMessageBox.critical(self, "Ошибка", message)
 
     def create_service_panel(self) -> QWidget:
         """Создание панели управления службой RAS с индикацией прав"""
