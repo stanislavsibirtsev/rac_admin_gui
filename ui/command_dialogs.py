@@ -23,12 +23,14 @@ class CommandDialog(QDialog):
     command_executed = pyqtSignal(bool, str, str)  # success, command, output
 
     def __init__(self, mode: str, commands: list, executor: RACCommandExecutor,
-                 logger: RACLogger, parent=None):
+                 logger: RACLogger, host: str, port: str, parent=None):
         super().__init__(parent)
         self.mode = mode
         self.commands = commands
         self.executor = executor
         self.logger = logger
+        self.host = host
+        self.port = port
 
         # Список для хранения данных вкладок
         self.tabs_data = []
@@ -182,7 +184,9 @@ class CommandDialog(QDialog):
             return
 
         params = self.get_current_parameters(tab_index)
-        args = self.executor.build_command_args(self.mode, command.command, params)
+
+        # Формируем команду с передачей host и port
+        args = self.executor.build_command_args(self.mode, command.command, params, self.host, self.port)
 
         # Формируем команду с подстановкой переменных
         command_str = "rac " + " ".join(args)
@@ -255,7 +259,7 @@ class CommandDialog(QDialog):
             return
 
         # Подтверждение выполнения
-        args = self.executor.build_command_args(self.mode, command.command, params)
+        args = self.executor.build_command_args(self.mode, command.command, params, self.host, self.port)
         command_str = "rac " + " ".join(args)
 
         reply = QMessageBox.question(
