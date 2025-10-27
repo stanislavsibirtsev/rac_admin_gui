@@ -3,6 +3,7 @@ import time
 import psutil
 from typing import Optional, Tuple
 import os
+import ctypes
 
 
 class ServiceManager:
@@ -12,19 +13,11 @@ class ServiceManager:
     def can_manage_services() -> bool:
         """Проверка возможности управления службами"""
         try:
-            # Пробуем выполнить команду, которая требует прав администратора
-            result = subprocess.run(
-                ["sc", "query", "Dhcp"],  # Используем стандартную службу Windows
-                capture_output=True,
-                text=True,
-                encoding='cp866',
-                timeout=5,
-                shell=True
-            )
-            # Если команда выполнилась успешно, у нас есть права на чтение служб
-            # Для управления службами нужны дополнительные права, но это хороший индикатор
-            return result.returncode == 0
-        except:
+            # Проверяем административные права через Windows API, без запуска команд в CMD
+            # Если функция возвращает True, текущий пользователь имеет права администратора
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        except Exception:
+            # В случае ошибки считаем, что прав нет
             return False
 
     @staticmethod
