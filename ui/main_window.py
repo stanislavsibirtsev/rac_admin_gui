@@ -197,17 +197,24 @@ class MainWindow(QMainWindow):
             self.rac_path_edit.setText(file_path)
 
     def test_rac_connection(self):
-        """Тестирование подключения к RAC"""
-        success, message = self.command_executor.test_rac_connection()
+        """Тестирование подключения к RAC с учетом Host и Port"""
+        rac_path = self.rac_path_edit.text().strip() or self.variable_manager.get_variable("rac_path") or "rac.exe"
+        host = self.host_edit.text().strip() or "localhost"
+        port = self.port_edit.text().strip() or "1545"
+
+        # Формируем список аргументов с host:port
+        args = [f"{host}:{port}"]
+
+        success, message = self.command_executor.execute_command(args)
 
         if success:
-            self.rac_status_label.setText("✅ " + message)
+            self.rac_status_label.setText("✅ Подключение успешно!")
             self.rac_status_label.setStyleSheet("color: green;")
-            QMessageBox.information(self, "Успех", message)
+            self.logger.log_info(f"✅ Подключение успешно!")
         else:
-            self.rac_status_label.setText("❌ " + message)
+            self.rac_status_label.setText("❌ Ошибка подключения.")
             self.rac_status_label.setStyleSheet("color: red;")
-            QMessageBox.critical(self, "Ошибка", message)
+            self.logger.log_error(f"❌ Ошибка подключения: {message}")
 
     def create_service_panel(self) -> QWidget:
         """Создание панели управления службой RAS с индикацией прав"""
@@ -474,13 +481,12 @@ class MainWindow(QMainWindow):
             dialog.show()
 
     def on_command_executed(self, success: bool, command: str, output: str):
-        """Обработчик выполнения команды"""
         if success:
             self.log_text_append(f"✅ Команда выполнена успешно: {command}")
-            self.log_text_append(f"Вывод:\n{output}\n" + "=" * 80 + "\n")
         else:
             self.log_text_append(f"❌ Ошибка выполнения команды: {command}")
-            self.log_text_append(f"Ошибка:\n{output}\n" + "=" * 80 + "\n")
+
+        self.log_text_append("=" * 80 + "\n")
 
     def log_text_append(self, text: str):
         """Добавление текста в лог"""
