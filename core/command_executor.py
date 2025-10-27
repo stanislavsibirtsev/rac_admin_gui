@@ -69,9 +69,21 @@ class RACCommandExecutor:
             self.logger.log_error(error_msg, "RAC_EXECUTOR")
             return False, error_msg
 
-    def build_command_args(self, mode: str, command: str, parameters: dict) -> List[str]:
-        """Построение аргументов команды из параметров с учетом переменных"""
-        args = [mode]
+    def build_command_args(self, mode: str, command: str, parameters: dict,
+                           host: str = None, port: int = None) -> List[str]:
+        """Построение аргументов команды с правильным размещением host:port"""
+        args = []
+
+        # Добавляем host:port как аргумент после rac, если указаны нестандартные значения
+        actual_host = host or self.variable_manager.get_variable("default_host") or "localhost"
+        actual_port = port or self.variable_manager.get_variable("default_port") or "1545"
+
+        # Добавляем host:port только если это не localhost:1545
+        if actual_host != "localhost" or actual_port != "1545":
+            args.append(f"{actual_host}:{actual_port}")
+
+        # Добавляем режим
+        args.append(mode)
 
         # Добавляем подкоманды если есть
         if " " in command:
@@ -96,22 +108,6 @@ class RACCommandExecutor:
                         final_value = f'"{substituted_value}"'
 
                     args.append(f"--{key}={final_value}")
-
-        # Особый случай: host и port добавляются как отдельный аргумент в конце
-        host = parameters.get('host', '')
-        port = parameters.get('port', '')
-
-        if host and port:
-            args.append(f"{host}:{port}")
-        elif host:
-            args.append(host)
-        elif port:
-            args.append(f"localhost:{port}")
-        else:
-            # Если не указаны, используем значения по умолчанию из переменных
-            default_host = self.variable_manager.get_variable("default_host") or "localhost"
-            default_port = self.variable_manager.get_variable("default_port") or "1545"
-            args.append(f"{default_host}:{default_port}")
 
         return args
 

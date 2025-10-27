@@ -15,7 +15,6 @@ from core.variable_manager import VariableManager
 from ui.command_dialogs import CommandDialog
 from ui.variables_dialog import VariablesDialog
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -73,8 +72,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(title_label)
 
         # Панель пути к RAC
-        rac_panel = self.create_rac_path_panel()
-        layout.addWidget(rac_panel)
+        connection_panel = self.create_connection_panel()
+        layout.addWidget(connection_panel)
 
         # Панель управления службой
         service_panel = self.create_service_panel()
@@ -116,9 +115,9 @@ class MainWindow(QMainWindow):
 
         return panel
 
-    def create_rac_path_panel(self) -> QWidget:
-        """Создание панели управления путем к RAC"""
-        panel = QGroupBox("Настройка пути к RAC")
+    def create_connection_panel(self) -> QWidget:
+        """Создание панели управления подключением"""
+        panel = QGroupBox("Настройка подключения")
         layout = QVBoxLayout(panel)
 
         # Путь к RAC
@@ -140,14 +139,42 @@ class MainWindow(QMainWindow):
         path_layout.addWidget(browse_button)
         path_layout.addWidget(test_button)
 
+        # Host и Port
+        host_port_layout = QHBoxLayout()
+        host_port_layout.addWidget(QLabel("Хост:"))
+
+        self.host_edit = QLineEdit()
+        self.host_edit.setPlaceholderText("localhost")
+        self.host_edit.setText(self.variable_manager.get_variable("default_host") or "localhost")
+        self.host_edit.textChanged.connect(self.on_host_port_changed)
+
+        host_port_layout.addWidget(QLabel("Порт:"))
+
+        self.port_edit = QLineEdit()
+        self.port_edit.setPlaceholderText("1545")
+        self.port_edit.setText(self.variable_manager.get_variable("default_port") or "1545")
+        self.port_edit.textChanged.connect(self.on_host_port_changed)
+
+        host_port_layout.addWidget(self.host_edit)
+        host_port_layout.addWidget(self.port_edit)
+
         # Статус RAC
         self.rac_status_label = QLabel("Статус: Не проверен")
         self.rac_status_label.setStyleSheet("color: gray;")
 
         layout.addLayout(path_layout)
+        layout.addLayout(host_port_layout)
         layout.addWidget(self.rac_status_label)
 
         return panel
+
+    def on_host_port_changed(self):
+        """Обработчик изменения host и port"""
+        host = self.host_edit.text().strip() or "localhost"
+        port = self.port_edit.text().strip() or "1545"
+
+        self.variable_manager.set_variable("default_host", host, "Хост по умолчанию", reserved=True)
+        self.variable_manager.set_variable("default_port", port, "Порт по умолчанию", reserved=True)
 
     def on_rac_path_changed(self):
         """Обработчик изменения пути к RAC"""
@@ -436,7 +463,13 @@ class MainWindow(QMainWindow):
                 if reply == QMessageBox.StandardButton.No:
                     return
 
-            dialog = CommandDialog(mode, self.rac_commands[mode], self.command_executor, self.logger, self)
+            # Получаем текущие значения host и port
+            current_host = self.host_edit.text().strip() or "localhost"
+            current_port = self.port_edit.text().strip() or "1545"
+
+            # Создаем диалог с передачей host и port
+            dialog = CommandDialog(mode, self.rac_commands[mode], self.command_executor,
+                                   self.logger, current_host, current_port, self)
             dialog.command_executed.connect(self.on_command_executed)
             dialog.show()
 
