@@ -41,19 +41,31 @@ class RACCommandExecutor:
 
             self.logger.log_command(command_str, "RAC_EXECUTOR")
 
-            # Выполняем команду
+            # Выполняем команду, получая байты вывода
             result = subprocess.run(
                 full_command,
                 capture_output=True,
-                text=True,
-                encoding='utf-8',
+                text=False,  # Получаем байты
                 check=True,
                 timeout=30
             )
-            return True, result.stdout
+
+            # Декодируем вывод с заменой ошибок
+            stdout = result.stdout.decode('cp866', errors='replace')
+            stderr = result.stderr.decode('cp866', errors='replace')
+
+            if stdout:
+                for line in stdout.splitlines():
+                    self.logger.log_info(line, "RAC_EXECUTOR")
+            if stderr:
+                for line in stderr.splitlines():
+                    self.logger.log_error(line, "RAC_EXECUTOR")
+
+                # Возвращаем только статус успеха, без вывода в UI
+            return True, ""
 
         except subprocess.CalledProcessError as e:
-            error_msg = f"Ошибка выполнения команды: {e.stderr}"
+            error_msg = f"Ошибка выполнения команды: {e.stderr.decode('cp866', errors='replace') if e.stderr else 'нет данных'}"
             self.logger.log_error(error_msg, "RAC_EXECUTOR")
             return False, error_msg
         except subprocess.TimeoutExpired:
