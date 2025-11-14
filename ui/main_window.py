@@ -139,31 +139,32 @@ class MainWindow(QMainWindow):
         path_layout.addWidget(browse_button)
         path_layout.addWidget(test_button)
 
-        # Host и Port
-        host_port_layout = QHBoxLayout()
-        host_port_layout.addWidget(QLabel("Хост:"))
+        # Host and Port in grid layout
+        host_port_grid = QGridLayout()
 
+        host_label = QLabel("Хост:")
         self.host_edit = QLineEdit()
         self.host_edit.setPlaceholderText("localhost")
         self.host_edit.setText(self.variable_manager.get_variable("default_host") or "localhost")
         self.host_edit.textChanged.connect(self.on_host_port_changed)
 
-        host_port_layout.addWidget(QLabel("Порт:"))
-
+        port_label = QLabel("Порт:")
         self.port_edit = QLineEdit()
         self.port_edit.setPlaceholderText("1545")
         self.port_edit.setText(self.variable_manager.get_variable("default_port") or "1545")
         self.port_edit.textChanged.connect(self.on_host_port_changed)
 
-        host_port_layout.addWidget(self.host_edit)
-        host_port_layout.addWidget(self.port_edit)
+        host_port_grid.addWidget(host_label, 0, 0)
+        host_port_grid.addWidget(self.host_edit, 0, 1)
+        host_port_grid.addWidget(port_label, 1, 0)
+        host_port_grid.addWidget(self.port_edit, 1, 1)
 
         # Статус RAC
         self.rac_status_label = QLabel("Статус: Не проверен")
         self.rac_status_label.setStyleSheet("color: gray;")
 
         layout.addLayout(path_layout)
-        layout.addLayout(host_port_layout)
+        layout.addLayout(host_port_grid)
         layout.addWidget(self.rac_status_label)
 
         return panel
@@ -502,8 +503,32 @@ class MainWindow(QMainWindow):
 
     def save_logs(self):
         """Сохранение логов в файл"""
-        # Реализация сохранения логов
-        pass
+        from PyQt6.QtWidgets import QFileDialog
+
+        # Получаем текст из лог-поля
+        log_text = self.log_text_edit.toPlainText()
+
+        if not log_text.strip():
+            QMessageBox.information(self, "Информация", "Логи пусты. Нет данных для сохранения.")
+            return
+
+        # Открываем диалог сохранения файла
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Сохранить логи",
+            "logs.txt",
+            "Text Files (*.txt);;All Files (*)"
+        )
+
+        if file_path:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as file:
+                    file.write(log_text)
+                QMessageBox.information(self, "Успех", f"Логи успешно сохранены в файл:\n{file_path}")
+                self.logger.log_info(f"Логи сохранены в файл: {file_path}")
+            except Exception as e:
+                QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить логи:\n{str(e)}")
+                self.logger.log_error(f"Ошибка сохранения логов: {e}")
 
     def closeEvent(self, event):
         """Обработчик закрытия приложения - корректное завершение"""
